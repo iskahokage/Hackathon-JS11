@@ -5,7 +5,8 @@ import { JSON_API } from '../helpers/consts';
 export const addProductContext = React.createContext();
 
 const INIT_STATE ={
-    products: []
+    products: [],
+    productToEdit: null
 }
 
 const reducer = (state=INIT_STATE, action)=>{
@@ -14,6 +15,11 @@ const reducer = (state=INIT_STATE, action)=>{
             return{
                 ...state,
                 products: action.payload
+            }
+        case "EDIT_PRODUCT":
+            return{
+                ...state,
+                productToEdit: action.payload
             }
         default: return state
     }
@@ -31,15 +37,33 @@ const AddProductContextProvider = ({children}) => {
     })
     }
 
-    const addProduct = (newTask)=>{
-        axios.post(JSON_API, newTask)
+    const addProduct = (newProduct)=>{
+        axios.post(JSON_API, newProduct)
+        getProductsData()
+    }
+    const deleteProduct = async (id)=>{
+        await axios.delete(`${JSON_API}/${id}`)
         getProductsData()
     }   
+    const editProduct = async(id)=>{
+        let {data} = await axios(`${JSON_API}/${id}`)
+        dispatch({
+            type: "EDIT_PRODUCT",
+            payload: data
+        })
+    }
+    const saveProduct = async(newProduct)=>{
+        await axios.patch(`${JSON_API}/${newProduct.id}`, newProduct)
+    }
     return (
         <addProductContext.Provider value={{
             products: state.products,
+            productToEdit: state.productToEdit,
             addProduct,
-            getProductsData
+            deleteProduct,
+            editProduct,
+            getProductsData,
+            saveProduct
         }}>
             {children}
         </addProductContext.Provider>
